@@ -1,0 +1,13 @@
+{
+  "name": "rails-superhero-cards",
+  "version": "0.1.0",
+  "description": "Rails Superhero Card Generator",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "heroku-postbuild": "npm run build"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}

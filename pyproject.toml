@@ -1,0 +1,81 @@
+[project]
+name = "rails-superhero-cards"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.17.2",
+    "boto3>=1.42.7",
+    "celery[redis]==5.5.3",
+    "colorlog>=6.10.1",
+    "fastapi>=0.124.2",
+    "fastapi-limiter>=0.1.6",
+    "langfuse>=3.10.5",
+    "llama-index>=0.14.10",
+    "llama-index-llms-openai>=0.6.10",
+    "openinference-instrumentation-llama-index>=4.3.9",
+    "psycopg2-binary>=2.9.11",
+    "pydantic-settings>=2.12.0",
+    "python-dotenv>=1.2.1",
+    "python-multipart>=0.0.20",
+    "sentry-sdk[fastapi]>=2.47.0",
+    "sqlalchemy>=2.0.45",
+    "uvicorn>=0.38.0",
+    "watchdog>=6.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "bpython>=0.26",
+    "pgcli>=4.3.0",
+    "ruff>=0.14.8",
+]
+
+# ------------------------------------------------ #
+# Ruff linting and formatting configuration        #
+# ------------------------------------------------ #
+[tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    ".venv",
+    "backend/alembic/**",
+    "backend/logging_config.py",
+]
+force-exclude = true
+line-length = 120
+
+[tool.ruff.lint]
+select = ["ANN", "ARG", "C4", "C90", "E", "F", "I", "N", "Q", "RET", "RSE", "RUF", "S", "SIM", "T", "TD", "TID", "T20"]
+ignore = ["ANN002", "ANN003", "ANN204", "D101", "D104", "D107", "TD002"]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/models/*" = ["D100", "F821"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+indent-style = "space"

@@ -1,0 +1,104 @@
+version: '3'
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  up:
+    desc: Start the application with Docker Compose
+    cmds:
+      - docker-compose up -d
+
+  up:build:
+    desc: Build the Docker images and start the application
+    cmds:
+      - docker-compose up --build -d
+
+  down:
+    desc: Stop the application and remove containers
+    cmds:
+      - docker-compose down
+
+  restart:
+    desc: Restart the application
+    cmds:
+      - task down
+      - task up
+
+  rebuild:
+    desc: Rebuild the Docker images and restart the application
+    cmds:
+      - task down
+      - task up:build
+
+  migrate:
+    desc: Run database migrations (apply pending migrations)
+    cmds:
+      - docker-compose exec backend uv run alembic upgrade head
+
+  migrate:generate:
+    desc: Generate a new database migration
+    cmds:
+      - docker-compose exec backend uv run alembic revision --autogenerate -m "{{.CLI_ARGS}}"
+    requires:
+      vars: [CLI_ARGS]
+
+  lint:
+    desc: Lint all code
+    cmds:
+      - task lint:backend
+      - task lint:frontend
+
+  lint:backend:
+    desc: Format and lint backend code with ruff
+    cmds:
+      - uv run ruff format backend/
+      - uv run ruff check backend/ --fix
+
+  lint:frontend:
+    desc: Format frontend code with prettier
+    dir: frontend
+    cmds:
+      - npm run format
+
+  logs:
+    desc: View application logs
+    cmds:
+      - docker-compose logs -f
+
+  logs:backend:
+    desc: View backend logs only
+    cmds:
+      - docker-compose logs -f backend
+
+  logs:frontend:
+    desc: View frontend logs only
+    cmds:
+      - docker-compose logs -f frontend
+
+  logs:worker:
+    desc: View worker logs only
+    cmds:
+      - docker-compose logs -f celery-worker
+
+  shell:app:
+    desc: Open a bpython shell in the backend container
+    cmds:
+      - docker-compose exec backend uv run bpython
+
+  shell:db:
+    desc: Open a pgcli shell for PostgreSQL
+    cmds:
+      - docker-compose exec db pgcli -h localhost -U postgres -d rails_superhero_cards
+
+  ls:s3:
+    desc: List objects in LocalStack S3 bucket
+    cmds:
+      - docker-compose exec localstack awslocal s3 ls s3://superhero-cards-dev/cards/ --recursive --human-readable
+
+  clean:
+    desc: Remove all containers, volumes, and images
+    cmds:
+      - docker-compose down -v

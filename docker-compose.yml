@@ -1,0 +1,137 @@
+services:
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - ./alembic.ini:/app/alembic.ini
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ALLOW_ORIGINS=${ALLOW_ORIGINS:-http://localhost:3003}
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/rails_superhero_cards
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - S3_BUCKET_NAME=superhero-cards-dev
+      - S3_FOLDER_PREFIX=cards
+      - S3_HOLIDAY_FOLDER_PREFIX=holiday_cards
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - ENABLE_LANGFUSE=${ENABLE_LANGFUSE:-false}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_BASE_URL=${LANGFUSE_BASE_URL}
+      - OTEL_EXPORTER_OTLP_TIMEOUT=60000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-worker:
+    build: .
+    command: ["/app/.venv/bin/watchmedo", "auto-restart", "--directory=./", "--pattern=*.py", "--recursive", "--", "/app/.venv/bin/celery", "-A", "backend.celery_worker", "worker", "--loglevel=info"]
+    volumes:
+      - ./backend:/app/backend
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/rails_superhero_cards
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - S3_BUCKET_NAME=superhero-cards-dev
+      - S3_FOLDER_PREFIX=cards
+      - S3_HOLIDAY_FOLDER_PREFIX=holiday_cards
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - ENABLE_LANGFUSE=${ENABLE_LANGFUSE:-false}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_BASE_URL=${LANGFUSE_BASE_URL}
+      - OTEL_EXPORTER_OTLP_TIMEOUT=60000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=rails_superhero_cards
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+    restart: unless-stopped
+    command: >
+      sh -c "
+        apk add --no-cache python3 py3-pip &&
+        pip3 install --break-system-packages pgcli &&
+        docker-entrypoint.sh postgres
+      "
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  localstack_data:
