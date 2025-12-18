@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Container, Box, Typography, ThemeProvider } from '@mui/material'
+import {
+  Container,
+  Box,
+  Typography,
+  ThemeProvider,
+  Card,
+  CardContent,
+  CircularProgress,
+} from '@mui/material'
 import axios from 'axios'
 import heic2any from 'heic2any'
 import { theme } from './theme/theme'
@@ -16,6 +24,8 @@ function App() {
   const [imagePreview, setImagePreview] = useState(null)
   const [imageProcessing, setImageProcessing] = useState(false)
   const [generatedImage, setGeneratedImage] = useState(null)
+  const [partialImage, setPartialImage] = useState(null)
+  const [partialIndex, setPartialIndex] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [holidayTheme, setHolidayTheme] = useState(false)
@@ -102,41 +112,41 @@ function App() {
     }
   }
 
-  const pollTaskStatus = async (taskId, apiUrl) => {
-    const maxAttempts = 60 // Poll for up to 5 minutes (60 * 5 seconds)
-    let attempts = 0
+  const connectToStream = (sessionId, apiUrl) => {
+    const eventSource = new EventSource(`${apiUrl}/stream/${sessionId}`)
 
-    const poll = async () => {
+    eventSource.onmessage = (event) => {
       try {
-        const statusResponse = await axios.get(`${apiUrl}/status/${taskId}`)
-        const { status, image_base64, status_description } = statusResponse.data
+        const data = JSON.parse(event.data)
 
-        if (status === 'complete' && image_base64) {
-          setGeneratedImage(`data:image/png;base64,${image_base64}`)
+        if (data.type === 'partial') {
+          setPartialImage(`data:image/png;base64,${data.image_base64}`)
+          setPartialIndex(data.partial_index)
+        } else if (data.type === 'complete') {
+          setGeneratedImage(`data:image/png;base64,${data.image_base64}`)
+          setPartialImage(null)
           setLoading(false)
-          return
-        }
-
-        if (status === 'error') {
-          setError(status_description || 'Failed to generate hero card. Please try again.')
+          eventSource.close()
+        } else if (data.type === 'error') {
+          setError(data.message || 'Failed to generate hero card. Please try again.')
+          setPartialImage(null)
           setLoading(false)
-          return
-        }
-
-        attempts++
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 5000) // Poll every 5 seconds
-        } else {
-          setError('Card generation is taking longer than expected. Please try again later.')
-          setLoading(false)
+          eventSource.close()
         }
       } catch (err) {
-        setError('Something went wrong. Please try again or contact us.')
-        setLoading(false)
+        console.error('Error parsing SSE data:', err, 'Raw data:', event.data)
       }
     }
 
-    poll()
+    eventSource.onerror = (err) => {
+      console.error('SSE connection error:', err, 'ReadyState:', eventSource.readyState)
+      setError('Connection error. Please try again.')
+      setPartialImage(null)
+      setLoading(false)
+      eventSource.close()
+    }
+
+    return () => eventSource.close()
   }
 
   const handleGenerate = async () => {
@@ -156,10 +166,11 @@ function App() {
     setError(null)
 
     try {
+      const sessionId = crypto.randomUUID()
       const formData = new FormData()
       formData.append('text', holidayTheme ? holidayMessage : skills)
       formData.append('image', imageFile)
-      formData.append('session_id', crypto.randomUUID())
+      formData.append('session_id', sessionId)
       formData.append('holiday_theme', holidayTheme)
 
       const apiUrl = import.meta.env.VITE_API_URL || ''
@@ -170,8 +181,8 @@ function App() {
         },
       })
 
-      if (response.status === 202 && response.data.task_id) {
-        pollTaskStatus(response.data.task_id, apiUrl)
+      if (response.status === 202) {
+        connectToStream(sessionId, apiUrl)
       } else {
         setGeneratedImage(`data:image/png;base64,${response.data.image_base64}`)
         setLoading(false)
@@ -181,6 +192,7 @@ function App() {
         err.response?.data?.error ||
         'Uh oh. Something went wrong... Please try again or contact us.'
       setError(errorMessage)
+      setPartialImage(null)
       setLoading(false)
     }
   }
@@ -210,6 +222,8 @@ function App() {
 
   const handleRegenerate = () => {
     setGeneratedImage(null)
+    setPartialImage(null)
+    setPartialIndex(0)
     setSkills('')
     setHolidayTheme(false)
     setHolidayMessage('')
@@ -238,7 +252,58 @@ function App() {
           </Container>
 
           <Container maxWidth="md">
-            {!generatedImage ? (
+            {generatedImage ? (
+              <GeneratedCard
+                imageData={generatedImage}
+                holidayTheme={holidayTheme}
+                onDownload={handleDownload}
+                onRegenerate={handleRegenerate}
+              />
+            ) : partialImage ? (
+              <Card elevation={3}>
+                <Box sx={{ p: 4 }}>
+                  <Typography variant="h5" gutterBottom sx={{ textAlign: 'center', mb: 3 }}>
+                    {holidayTheme
+                      ? '🎄 Generating Your Holiday Card...'
+                      : '🦸 Generating Your Hero Card...'}
+                  </Typography>
+
+                  <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <img
+                      src={partialImage}
+                      alt="Partial preview"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '600px',
+                        width: 'auto',
+                        height: 'auto',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      }}
+                    />
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 2,
+                      py: 2,
+                    }}
+                  >
+                    <CircularProgress size={20} />
+                    <Typography variant="body1" color="text.secondary">
+                      {partialIndex === 1
+                        ? '🎨 Working on your masterpiece...'
+                        : partialIndex === 2
+                          ? '⏳ Making it really awesome, one pixel at a time...'
+                          : '✨ Hang on just a little longer, perfecting the details...'}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Card>
+            ) : (
               <HeroCardForm
                 skills={skills}
                 onSkillsChange={(e) => setSkills(e.target.value)}
@@ -254,13 +319,6 @@ function App() {
                 onHolidayThemeChange={(e) => setHolidayTheme(e.target.checked)}
                 holidayMessage={holidayMessage}
                 onHolidayMessageChange={(e) => setHolidayMessage(e.target.value)}
-              />
-            ) : (
-              <GeneratedCard
-                imageData={generatedImage}
-                holidayTheme={holidayTheme}
-                onDownload={handleDownload}
-                onRegenerate={handleRegenerate}
               />
             )}
           </Container>

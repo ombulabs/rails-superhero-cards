@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from .config import settings
 from .exceptions import ImageFormatError
 from .llms import llm
-from .logging_config import logger, log_memory_usage
+from .logging_config import log_memory_usage, logger
 
 
 class ValidationOutput(BaseModel):

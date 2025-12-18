@@ -1,13 +1,28 @@
 import asyncio
+import json
 
 import sentry_sdk
 
 from .card_generator import CardGenerator
 from .db import get_session
-from .dependencies import celery_app
+from .dependencies import celery_app, get_redis_pubsub_client
 from .exceptions import ImageFormatError, ImageSizeError, InputValidationError
-from .logging_config import logger, log_memory_usage
+from .logging_config import log_memory_usage, logger
 from .models import Card, CardTheme
+
+
+def _publish_error_to_stream(session_id: str, error_message: str) -> None:
+    try:
+        redis_client = get_redis_pubsub_client()
+        channel = f"image_stream:{session_id}"
+        redis_client.publish(
+            channel,
+            json.dumps({"type": "error", "message": error_message}),
+        )
+        redis_client.close()
+        logger.debug(f"Published error to SSE stream for session {session_id}")
+    except Exception as redis_error:
+        logger.error(f"Failed to publish error to Redis: {redis_error}")
 
 
 def _save_error_to_db(
@@ -33,7 +48,7 @@ def _save_error_to_db(
 def generate_superhero_card(session_id: str, text: str, image_data: bytes, holiday_theme: bool = False) -> dict:
     log_memory_usage("Celery task start")
     try:
-        result = asyncio.run(
+        asyncio.run(
             CardGenerator(
                 image_base64=image_data,
                 text=text,
@@ -42,7 +57,6 @@ def generate_superhero_card(session_id: str, text: str, image_data: bytes, holid
             ).generate()
         )
         log_memory_usage("Celery task complete")
-        return result
     except (InputValidationError, ImageFormatError, ImageSizeError) as error:
         logger.warning(f"User input validation failed for session {session_id}: {type(error).__name__}: {error}")
         error_message = str(error)
@@ -53,7 +67,7 @@ def generate_superhero_card(session_id: str, text: str, image_data: bytes, holid
             error_type="validation",
             holiday_theme=holiday_theme,
         )
-        return {"session_id": session_id}
+        _publish_error_to_stream(session_id=session_id, error_message=error_message)
     except Exception as error:
         logger.error(f"Task failed for session {session_id}: {type(error).__name__}: {error}")
         sentry_sdk.capture_exception(error)
@@ -65,4 +79,5 @@ def generate_superhero_card(session_id: str, text: str, image_data: bytes, holid
             error_type="system",
             holiday_theme=holiday_theme,
         )
-        return {"session_id": session_id}
+        _publish_error_to_stream(session_id=session_id, error_message=error_message)
+    return {"session_id": session_id}

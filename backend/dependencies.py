@@ -8,6 +8,7 @@ import redis.asyncio as redis
 from celery import Celery
 from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
+from redis import Redis
 
 from .config import settings
 
@@ -27,6 +28,19 @@ celery_app = Celery(
 
 celery_app.conf.result_extended = True
 celery_app.autodiscover_tasks(["backend.tasks"])
+celery_app.conf.result_expires = 300
+
+
+def get_redis_pubsub_client() -> Redis:
+    url = urlparse(settings.redis_url)
+    return Redis(
+        host=url.hostname,
+        port=url.port,
+        password=url.password,
+        ssl=(url.scheme == "rediss"),
+        ssl_cert_reqs=ssl.CERT_NONE if url.scheme == "rediss" else None,
+        decode_responses=True,
+    )
 
 
 @asynccontextmanager

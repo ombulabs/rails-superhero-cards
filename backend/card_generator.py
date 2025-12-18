@@ -41,9 +41,7 @@ class CardGenerator:
             theme=CardTheme.HOLIDAY if self.holiday_theme else CardTheme.SUPERHERO,
         )
 
-        return {
-            "session_id": self.session_id,
-        }
+        return {"session_id": self.session_id}
 
     @observe(name="rails_superhero_card_workflow")
     async def _run_superhero_workflow(self) -> dict:
@@ -51,7 +49,7 @@ class CardGenerator:
             session_id=self.session_id,
         ):
             workflow = ImageGenWorkflow()
-            return await workflow.run(image_data=self.image_data, skills=self.text)
+            return await workflow.run(image_data=self.image_data, skills=self.text, session_id=self.session_id)
 
     @observe(name="rails_holiday_card_workflow")
     async def _run_holiday_workflow(self) -> dict:
@@ -59,7 +57,7 @@ class CardGenerator:
             session_id=self.session_id,
         ):
             workflow = HolidayImageGenWorkflow()
-            return await workflow.run(image_data=self.image_data, message=self.text)
+            return await workflow.run(image_data=self.image_data, message=self.text, session_id=self.session_id)
 
     def _store_card_in_bucket(self, image_data: str) -> str:
         logger.info("Storing image in AWS")
