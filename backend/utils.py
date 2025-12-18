@@ -38,11 +38,13 @@ def compress_image(image_data: bytes, max_size_bytes: int = 1024 * 1024) -> byte
         image.save(buffer, format="JPEG", quality=85, optimize=False)  # Skip optimize for speed
 
         if buffer.tell() <= max_size_bytes:
-            logger.info(f"Image compressed to {buffer.tell() / 1024:.0f} KB (original: {len(image_data) / 1024:.0f} KB)")
+            logger.info(
+                f"Image compressed to {buffer.tell() / 1024:.0f} KB (original: {len(image_data) / 1024:.0f} KB)"
+            )
             return buffer.getvalue()
 
         size_ratio = buffer.tell() / max_size_bytes
-        target_scale = min(0.9, 1.0 / (size_ratio ** 0.5))
+        target_scale = min(0.9, 1.0 / (size_ratio**0.5))
 
         if target_scale < 0.95:
             new_size = (int(original_size[0] * target_scale), int(original_size[1] * target_scale))
