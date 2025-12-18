@@ -44,7 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(router, prefix="/api")
 
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "dist"
 
