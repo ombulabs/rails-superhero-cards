@@ -6,7 +6,7 @@ from .card_generator import CardGenerator
 from .db import get_session
 from .dependencies import celery_app
 from .exceptions import ImageFormatError, ImageSizeError, InputValidationError
-from .logging_config import logger
+from .logging_config import logger, log_memory_usage
 from .models import Card, CardTheme
 
 
@@ -31,8 +31,9 @@ def _save_error_to_db(
 
 @celery_app.task(name="generate_superhero_card")
 def generate_superhero_card(session_id: str, text: str, image_data: bytes, holiday_theme: bool = False) -> dict:
+    log_memory_usage("Celery task start")
     try:
-        return asyncio.run(
+        result = asyncio.run(
             CardGenerator(
                 image_base64=image_data,
                 text=text,
@@ -40,6 +41,8 @@ def generate_superhero_card(session_id: str, text: str, image_data: bytes, holid
                 holiday_theme=holiday_theme,
             ).generate()
         )
+        log_memory_usage("Celery task complete")
+        return result
     except (InputValidationError, ImageFormatError, ImageSizeError) as error:
         logger.warning(f"User input validation failed for session {session_id}: {type(error).__name__}: {error}")
         error_message = str(error)

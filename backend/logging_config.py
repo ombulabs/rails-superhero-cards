@@ -1,5 +1,7 @@
 import logging
+import os
 
+import psutil
 from colorlog import ColoredFormatter
 
 from .config import settings
@@ -35,3 +37,13 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.WARNING)
 logging.getLogger("PIL").setLevel(logging.WARNING)
 logging.getLogger("llama_index_instrumentation").setLevel(logging.WARNING)
+
+
+def log_memory_usage(label: str = "") -> None:
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    logger.info(
+        f"Memory [{label}] - RSS: {mem_info.rss / 1024 / 1024:.2f}MB, "
+        f"VMS: {mem_info.vms / 1024 / 1024:.2f}MB, "
+        f"Percent: {process.memory_percent():.1f}%"
+    )
