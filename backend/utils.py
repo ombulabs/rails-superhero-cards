@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from .config import settings
 from .exceptions import ImageFormatError
 from .llms import llm
-from .logging_config import logger
+from .logging_config import log_memory_usage, logger
 
 
 class ValidationOutput(BaseModel):
@@ -28,6 +28,7 @@ def validate_image_format(image_data: bytes) -> None:
 
 
 def compress_image(image_data: bytes, max_size_bytes: int = 1024 * 1024) -> bytes:
+    log_memory_usage("Before image compression")
     with Image.open(BytesIO(image_data)) as image:
         original_size = image.size
 
@@ -69,9 +70,11 @@ def compress_image(image_data: bytes, max_size_bytes: int = 1024 * 1024) -> byte
 
             if buffer.tell() <= max_size_bytes:
                 logger.info(f"Compressed to {buffer.tell() / 1024:.0f} KB with quality={quality}")
+                log_memory_usage("After image compression")
                 return buffer.getvalue()
 
         logger.warning(f"Could not compress below {max_size_bytes / 1024:.0f} KB, returning best effort")
+        log_memory_usage("After image compression")
         return buffer.getvalue()
 
 
@@ -89,6 +92,7 @@ async def validate_input(query: str, prompt: PromptTemplate) -> bool:
 
 
 def create_card(image_base64: str, text: str) -> str:
+    log_memory_usage("Before card creation")
     image_data = base64.b64decode(image_base64)
 
     with Image.open(BytesIO(image_data)) as generated_image:
@@ -156,4 +160,5 @@ def create_card(image_base64: str, text: str) -> str:
 
             buffer = BytesIO()
             card.save(buffer, format="PNG")
+            log_memory_usage("After card creation")
             return base64.b64encode(buffer.getvalue()).decode("utf-8")

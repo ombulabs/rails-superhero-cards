@@ -1,15 +1,16 @@
+import asyncio
+import json
 import re
+from typing import AsyncGenerator
 
-from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi_limiter.depends import RateLimiter
 
 from .aws_service import S3Service
 from .config import settings
 from .db import get_session
-from .dependencies import celery_app
-from .enums import TaskStatus
+from .dependencies import get_redis_pubsub_client
 from .exceptions import ImageFormatError
 from .logging_config import logger
 from .models import Card
@@ -42,7 +43,7 @@ async def generate_hero_card(
 
     text = re.sub(r"\s+", " ", text.strip())
 
-    celery_task = generate_superhero_card.delay(
+    generate_superhero_card.delay(
         image_data=compressed_image_data,
         text=text,
         session_id=session_id,
@@ -52,7 +53,6 @@ async def generate_hero_card(
     return JSONResponse(
         status_code=202,
         content={
-            "task_id": celery_task.id,
             "session_id": session_id,
             "message": "Card generation started",
         },
@@ -91,28 +91,54 @@ def _get_error_from_db(session_id: str) -> str | None:
         return None
 
 
-@router.get("/status/{task_id}")
-def check_task_status(task_id: str) -> JSONResponse:
-    result = AsyncResult(task_id.strip(), app=celery_app)
-    status = TaskStatus(result.status)
+@router.get("/stream/{session_id}")
+async def stream_partial_images(session_id: str) -> StreamingResponse:
+    async def event_generator() -> AsyncGenerator[str, None]:
+        redis_client = get_redis_pubsub_client()
+        pubsub = redis_client.pubsub()
+        channel = f"image_stream:{session_id}"
 
-    image_base64 = None
-    session_id = None
-    error_message = None
+        try:
+            pubsub.subscribe(channel)
+            logger.info(f"SSE client connected for session {session_id}")
 
-    if status == TaskStatus.SUCCESS and result.result and (session_id := result.result.get("session_id")):
-        error_message = _get_error_from_db(session_id)
-        if not error_message:
-            image_base64 = _get_card_from_s3(session_id)
-            logger.debug(f"Task {task_id} completed successfully for session {session_id}")
+            yield f"data: {json.dumps({'type': 'connected', 'session_id': session_id})}\n\n"
 
-    status_description = error_message if error_message else status.description
+            timeout = 300  # 5 minutes max
+            start_time = asyncio.get_event_loop().time()
 
-    return JSONResponse(
-        content={
-            "status": "error" if error_message else status.status,
-            "status_description": status_description,
-            "image_base64": image_base64,
-            "session_id": session_id,
-        }
+            while True:
+                if asyncio.get_event_loop().time() - start_time > timeout:
+                    logger.warning(f"SSE timeout for session {session_id}")
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'Timeout'})}\n\n"
+                    break
+
+                message = pubsub.get_message(timeout=0.1)
+                if message and message["type"] == "message":
+                    data = json.loads(message["data"])
+                    logger.debug(f"Streaming event to client: {data.get('type')}")
+                    yield f"data: {json.dumps(data)}\n\n"
+
+                    if data.get("type") == "complete":
+                        break
+
+                await asyncio.sleep(0.1)
+
+        except Exception as e:
+            logger.error(f"Error in SSE stream for session {session_id}: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Stream error'})}\n\n"
+        finally:
+            pubsub.unsubscribe(channel)
+            pubsub.close()
+            redis_client.close()
+            logger.info(f"SSE client disconnected for session {session_id}")
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )

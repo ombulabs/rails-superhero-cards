@@ -1,3 +1,4 @@
+import json
 import random
 from contextlib import nullcontext
 from io import BytesIO
@@ -16,9 +17,10 @@ from llama_index.core.workflow import (
 )
 
 from .config import settings
+from .dependencies import get_redis_pubsub_client
 from .exceptions import InputValidationError
 from .llms import openai_client
-from .logging_config import logger
+from .logging_config import log_memory_usage, logger
 from .utils import create_card, validate_input
 
 HOLIDAY_THEMES = [
@@ -135,9 +137,11 @@ class HolidayImageGenWorkflow(Workflow):
             raise ValueError("An uploaded image is required.")
 
         message = ev.get("message", "")
+        session_id = ev.get("session_id")
 
         await ctx.store.set("image_data", image_data)
         await ctx.store.set("message", message)
+        await ctx.store.set("session_id", session_id)
 
         is_valid = await validate_input(query=message, prompt=validation_prompt)
 
@@ -158,11 +162,16 @@ class HolidayImageGenWorkflow(Workflow):
     @step()
     async def generate_image(self, ev: HolidayThemeEvent, ctx: Context) -> GeneratedImageEvent:
         image_data = await ctx.store.get("image_data")
+        session_id = await ctx.store.get("session_id")
+        message = await ctx.store.get("message", "")
 
         image_file = BytesIO(image_data)
         image_file.name = settings.mock_upload_file_name
 
         prompt = image_prompt.format(theme=ev.theme)
+
+        redis_client = get_redis_pubsub_client()
+        channel = f"image_stream:{session_id}"
 
         if settings.enable_langfuse:
             langfuse = get_client()
@@ -178,16 +187,48 @@ class HolidayImageGenWorkflow(Workflow):
         else:
             observation_context = nullcontext()
 
+        log_memory_usage("Before OpenAI image generation")
+
         with observation_context as obs:
-            response = openai_client.images.edit(
+            stream = openai_client.images.edit(
                 image=image_file,
                 prompt=prompt,
                 model=settings.image_gen_model,
                 n=1,
                 size=settings.generated_image_size,
+                stream=True,
+                partial_images=3,
             )
 
-            generated_image_base64 = response.data[0].b64_json
+            generated_image_base64 = None
+            partial_count = 0
+
+            for event in stream:
+                logger.debug(f"Received event type: {event.type} for session {session_id}")
+
+                if event.type == "image_generation.partial_image" or event.type == "image_edit.partial_image":
+                    partial_count += 1
+                    partial_image_base64 = event.b64_json
+                    logger.debug(f"Received partial image {partial_count} for session {session_id}")
+
+                    partial_card_base64 = create_card(image_base64=partial_image_base64, text=message)
+
+                    redis_client.publish(
+                        channel,
+                        json.dumps(
+                            {
+                                "type": "partial",
+                                "image_base64": partial_card_base64,
+                                "partial_index": partial_count,
+                            }
+                        ),
+                    )
+
+                elif event.type == "image_generation.completed" or event.type == "image_edit.completed":
+                    generated_image_base64 = event.b64_json
+                    logger.debug(f"Received final image for session {session_id}")
+                else:
+                    logger.warning(f"Unknown event type: {event.type}")
 
             if settings.enable_langfuse:
                 image_media = LangfuseMedia(base64_data_uri=f"data:image/png;base64,{generated_image_base64}")
@@ -203,9 +244,12 @@ class HolidayImageGenWorkflow(Workflow):
                     metadata={
                         "costUsd": total_cost,
                         "generatedImageSize": settings.generated_image_size,
+                        "partialImagesReceived": partial_count,
                     },
                 )
 
+        redis_client.close()
+        log_memory_usage("After OpenAI image generation")
         logger.debug("Holiday card generated.")
 
         return GeneratedImageEvent(image_base64=generated_image_base64, theme=ev.theme)
@@ -213,9 +257,23 @@ class HolidayImageGenWorkflow(Workflow):
     @step()
     async def generate_card(self, ev: GeneratedImageEvent, ctx: Context) -> StopEvent:
         message = await ctx.store.get("message", "")
+        session_id = await ctx.store.get("session_id")
 
         logger.debug(f"Creating holiday card with theme: {ev.theme}")
         final_card_base64 = create_card(image_base64=ev.image_base64, text=message)
+
+        redis_client = get_redis_pubsub_client()
+        channel = f"image_stream:{session_id}"
+        redis_client.publish(
+            channel,
+            json.dumps(
+                {
+                    "type": "complete",
+                    "image_base64": final_card_base64,
+                }
+            ),
+        )
+        redis_client.close()
 
         return StopEvent(
             result={
