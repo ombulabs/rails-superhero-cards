@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
 
-    environment: Literal["development", "production"] = "development"
+    environment: Literal["development", "staging", "production"] = "development"
     allow_origins: str | list[str] = []
 
     @field_validator("allow_origins", mode="before")
