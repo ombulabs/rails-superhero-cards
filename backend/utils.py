@@ -4,12 +4,15 @@ from io import BytesIO
 
 from llama_index.core.prompts import PromptTemplate
 from PIL import Image, ImageDraw, ImageFont
+from pillow_heif import register_heif_opener
 from pydantic import BaseModel, Field
 
 from .config import settings
 from .exceptions import ImageFormatError
 from .llms import llm
 from .logging_config import log_memory_usage, logger
+
+register_heif_opener()
 
 
 class ValidationOutput(BaseModel):
@@ -18,13 +21,24 @@ class ValidationOutput(BaseModel):
 
 
 def validate_image_format(image_data: bytes) -> None:
-    with Image.open(BytesIO(image_data)) as image:
-        image_format = image.format
+    try:
+        logger.debug(f"Validating image data of size: {len(image_data)} bytes")
 
-        if image_format not in ["PNG", "JPEG", "JPG"]:
-            raise ImageFormatError("Unsupported format. Please upload a PNG or JPG file")
+        if not image_data:
+            raise ImageFormatError("Image data is empty")
 
-        logger.debug(f"Image format validated: {image_format}")
+        image_buffer = BytesIO(image_data)
+        image_buffer.seek(0)
+
+        with Image.open(image_buffer) as image:
+            image_format = image.format
+            image.verify()
+            logger.debug(f"Image format validated: {image_format}")
+    except ImageFormatError:
+        raise
+    except Exception as error:
+        logger.error(f"Failed to validate image format: {error}")
+        raise ImageFormatError("Unable to process image. Please upload a valid image file (PNG, JPG, HEIC, WebP, etc.)")
 
 
 def compress_image(image_data: bytes, max_size_bytes: int = 1024 * 1024) -> bytes:

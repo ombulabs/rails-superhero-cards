@@ -15,11 +15,3 @@ export const NAV_LINKS = [
   { label: 'Our Services', href: 'https://www.fastruby.io/our-services' },
   { label: 'Contact Us', href: 'https://www.fastruby.io/#contact-us' },
 ]
-
-export const VALID_IMAGE_TYPES = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/heic',
-  'image/heif',
-]

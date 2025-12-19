@@ -1,13 +1,5 @@
-import { useState, useEffect } from 'react'
-import {
-  Container,
-  Box,
-  Typography,
-  ThemeProvider,
-  Card,
-  CardContent,
-  CircularProgress,
-} from '@mui/material'
+import { useState } from 'react'
+import { Container, Box, Typography, ThemeProvider, Card, CircularProgress } from '@mui/material'
 import axios from 'axios'
 import heic2any from 'heic2any'
 import { theme } from './theme/theme'
@@ -16,7 +8,6 @@ import { Footer } from './components/layout/Footer'
 import { Pipes } from './components/layout/Pipes'
 import { HeroCardForm } from './components/form/HeroCardForm'
 import { GeneratedCard } from './components/result/GeneratedCard'
-import { VALID_IMAGE_TYPES } from './utils/constants'
 
 function App() {
   const [skills, setSkills] = useState('')
@@ -35,55 +26,35 @@ function App() {
     const file = event.target.files[0]
     if (!file) return
 
-    const isHEICFile = (file) => {
-      const isHEICType = file.type === 'image/heic' || file.type === 'image/heif'
-      const isHEICExtension =
-        file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
-      return isHEICType || isHEICExtension
-    }
-
-    const isValidType = VALID_IMAGE_TYPES.includes(file.type) || isHEICFile(file)
-
-    console.log('File upload debug:', {
-      fileName: file.name,
-      fileType: file.type,
-      isHEIC: isHEICFile(file),
-      isValidType: isValidType,
-    })
-
-    if (!isValidType) {
-      setError('Please upload a PNG, JPG, or HEIC image. Other formats are not supported.')
-      return
-    }
-
     setError(null)
     setImageProcessing(true)
 
     try {
       let processedFile = file
+      let previewFile = file
 
-      if (isHEICFile(file)) {
-        console.log('HEIC file detected, starting conversion...')
+      const isHEICFile =
+        file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
+
+      if (isHEICFile) {
         try {
           const convertedBlob = await heic2any({
             blob: file,
             toType: 'image/jpeg',
             quality: 0.9,
           })
+
           const jpegBlob = convertedBlob instanceof Blob ? convertedBlob : convertedBlob[0]
           processedFile = new File([jpegBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
             type: 'image/jpeg',
             lastModified: Date.now(),
           })
-          console.log('HEIC conversion successful')
+          previewFile = processedFile
         } catch (heicError) {
-          console.error('HEIC conversion error:', heicError)
-          setError('Failed to convert HEIC image. Please convert to JPG or PNG and try again.')
-          setImageProcessing(false)
-          return
+          processedFile = file
+          previewFile = null
         }
       }
-
       const maxSize = 4 * 1024 * 1024
       if (processedFile.size > maxSize) {
         setError('Image too large. Maximum size is 4MB.')
@@ -93,21 +64,25 @@ function App() {
 
       setImageFile(processedFile)
 
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        if (reader.result) {
-          setImagePreview(reader.result)
+      if (previewFile) {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          if (reader.result) {
+            setImagePreview(reader.result)
+          }
+          setImageProcessing(false)
         }
+        reader.onerror = () => {
+          setError('Failed to read image file')
+          setImageProcessing(false)
+        }
+        reader.readAsDataURL(previewFile)
+      } else {
+        setImagePreview('heic-placeholder')
         setImageProcessing(false)
       }
-      reader.onerror = () => {
-        setError('Failed to read image file')
-        setImageProcessing(false)
-      }
-      reader.readAsDataURL(processedFile)
     } catch (err) {
       setError('Failed to process image. Please try a different file.')
-      console.error('Image processing error:', err)
       setImageProcessing(false)
     }
   }

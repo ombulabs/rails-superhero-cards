@@ -1,6 +1,5 @@
 import { Box, Button, Paper, Tooltip, IconButton, CircularProgress } from '@mui/material'
 import { CloudUpload, InfoOutlined } from '@mui/icons-material'
-import { VALID_IMAGE_TYPES } from '../../utils/constants'
 
 export function ImageUpload({ onImageUpload, imagePreview, imageProcessing, disabled }) {
   return (
@@ -13,11 +12,11 @@ export function ImageUpload({ onImageUpload, imagePreview, imageProcessing, disa
           fullWidth
           disabled={imageProcessing || disabled}
         >
-          Upload Your Photo (PNG, JPG or HEIC)
+          Upload Your Photo
           <input
             type="file"
             hidden
-            accept={VALID_IMAGE_TYPES.join(',')}
+            accept="image/*"
             onChange={onImageUpload}
             disabled={imageProcessing || disabled}
           />
@@ -54,11 +53,29 @@ export function ImageUpload({ onImageUpload, imagePreview, imageProcessing, disa
 
       {!imageProcessing && imagePreview && (
         <Paper elevation={1} sx={{ p: 2, textAlign: 'center' }}>
-          <img
-            src={imagePreview}
-            alt="Preview"
-            style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }}
-          />
+          {imagePreview === 'heic-placeholder' ? (
+            <Box
+              sx={{
+                minHeight: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                gap: 1,
+                color: 'text.secondary',
+              }}
+            >
+              <CloudUpload sx={{ fontSize: 48, opacity: 0.5 }} />
+              <Box>HEIC image uploaded</Box>
+              <Box sx={{ fontSize: '12px' }}>(Preview not available)</Box>
+            </Box>
+          ) : (
+            <img
+              src={imagePreview}
+              alt="Preview"
+              style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }}
+            />
+          )}
         </Paper>
       )}
     </Box>
