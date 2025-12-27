@@ -22,7 +22,7 @@ export function ImageUpload({ onImageUpload, imagePreview, imageProcessing, disa
           />
         </Button>
         <Tooltip
-          title="We DO NOT store your uploaded images. Only the generated superhero cards are saved."
+          title="We DO NOT store your uploaded images. Only the generated cards are saved."
           arrow
           placement="right"
         >

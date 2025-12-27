@@ -1,6 +1,7 @@
 import { Box, Button, Card, CardContent, CircularProgress, Alert } from '@mui/material'
 import { AutoAwesome } from '@mui/icons-material'
 import { SkillsInput } from './SkillsInput'
+import { ThemedInput } from './ThemedInput'
 import { ImageUpload } from './ImageUpload'
 import { HolidayToggle } from './HolidayToggle'
 import { COLORS } from '../../utils/constants'
@@ -28,14 +29,7 @@ export function HeroCardForm({
           <HolidayToggle checked={holidayTheme} onChange={onHolidayThemeChange} />
 
           {holidayTheme ? (
-            <SkillsInput
-              value={holidayMessage}
-              onChange={onHolidayMessageChange}
-              label="Your Holiday Message"
-              placeholder="Merry Christmas from the Fastruby.io team! 🎄"
-              helperText="Add a festive message for your holiday card (max 30 characters)"
-              maxLength={30}
-            />
+            <ThemedInput value={holidayMessage} onChange={onHolidayMessageChange} />
           ) : (
             <SkillsInput value={skills} onChange={onSkillsChange} />
           )}
@@ -66,18 +60,18 @@ export function HeroCardForm({
             startIcon={loading ? <CircularProgress size={20} /> : <AutoAwesome />}
             sx={{
               py: 1.5,
-              bgcolor: holidayTheme ? '#d32f2f' : COLORS.primary,
+              bgcolor: holidayTheme ? '#FFD700' : COLORS.primary,
               '&:hover': {
-                bgcolor: holidayTheme ? '#b71c1c' : COLORS.primaryHover,
+                bgcolor: holidayTheme ? '#FFC700' : COLORS.primaryHover,
               },
             }}
           >
             {loading
               ? holidayTheme
-                ? 'Generating Your Holiday Card...'
+                ? 'Generating Your New Year Card...'
                 : 'Generating Your Hero Card...'
               : holidayTheme
-                ? '🎄 Generate Holiday Card'
+                ? '🎆 Generate New Year Card'
                 : 'Generate Hero Card'}
           </Button>
         </Box>
