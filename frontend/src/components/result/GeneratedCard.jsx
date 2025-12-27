@@ -13,7 +13,7 @@ export function GeneratedCard({ imageData, holidayTheme, onDownload, onRegenerat
     <Card elevation={3}>
       <CardContent sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom sx={{ textAlign: 'center', mb: 3 }}>
-          {holidayTheme ? '🎄 Your Holiday Card' : '🦸 Your Hero Card'}
+          {holidayTheme ? '🎆 Your New Year Card' : '🦸 Your Hero Card'}
         </Typography>
 
         <Box sx={{ textAlign: 'center', mb: 3 }}>

@@ -103,7 +103,7 @@ function App() {
           setLoading(false)
           eventSource.close()
         } else if (data.type === 'error') {
-          setError(data.message || 'Failed to generate hero card. Please try again.')
+          setError(data.message || 'Failed to generate card. Please try again.')
           setPartialImage(null)
           setLoading(false)
           eventSource.close()
@@ -239,7 +239,7 @@ function App() {
                 <Box sx={{ p: 4 }}>
                   <Typography variant="h5" gutterBottom sx={{ textAlign: 'center', mb: 3 }}>
                     {holidayTheme
-                      ? '🎄 Generating Your Holiday Card...'
+                      ? '🎆 Generating Your New Year Card...'
                       : '🦸 Generating Your Hero Card...'}
                   </Typography>
 
