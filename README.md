@@ -58,9 +58,9 @@ Run `task` to see a list of all available tasks.
 
 Copy `.env.example` and fill in your environment variables.
 
-Run `docker-compose up -d` to start the application.
+Run `docker compose up -d` to start the application.
 
-Run `docker-compose exec backend uv run alembic upgrade head` to run migrations.
+Run `docker compose exec backend uv run alembic upgrade head` to run migrations.
 
 Navigate to `http://localhost:3003` to access the application.
 
