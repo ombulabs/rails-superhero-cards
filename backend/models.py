@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, Enum, Text, func
+from sqlalchemy import JSON, Column, Enum, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -25,21 +25,15 @@ class User(Base):
     oauth_provider: Mapped[str | None] = mapped_column(nullable=True)
     oauth_id: Mapped[str | None] = mapped_column(nullable=True, unique=True)
 
-class PromptConfigType(StrEnum):
-    HOLIDAY = "holiday"
-    SUPERHERO = "superhero"
-
 class PromptConfig(Base):
     """Stores configurable prompts and themes for card generation."""
 
     __tablename__ = "prompt_configs"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    config_type: Mapped[PromptConfigType] = Column(
-        Enum(PromptConfigType), nullable=False, unique=True
-    )
     validation_prompt: Mapped[str] = mapped_column(Text, nullable=False)
     image_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    themes: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
 
