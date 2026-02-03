@@ -18,7 +18,8 @@
     "axios": "^1.6.8",
     "heic2any": "^0.0.4",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "react-router-dom": "^6.14.2"
   },
   "devDependencies": {
     "@types/react": "^19.2.7",
