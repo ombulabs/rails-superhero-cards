@@ -64,7 +64,7 @@ class HolidayImageGenWorkflow(Workflow):
 
     @step()
     async def pick_theme(self, ev: ValidatedInputEvent, ctx: Context) -> HolidayThemeEvent:  # noqa: ARG002
-        config = await ctx.store.get("holiday_config")
+        config = get_holiday_config()
         themes = config["themes"]
         theme = random.choice(themes)  # noqa: S311
         logger.debug(f"Holiday theme: {theme}")
