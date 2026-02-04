@@ -48,7 +48,6 @@ class HolidayImageGenWorkflow(Workflow):
         session_id = ev.get("session_id")
 
         config = get_holiday_config()
-        await ctx.store.set("holiday_config", config)
         await ctx.store.set("image_data", image_data)
         await ctx.store.set("message", message)
         await ctx.store.set("session_id", session_id)
@@ -77,7 +76,7 @@ class HolidayImageGenWorkflow(Workflow):
         image_data = await ctx.store.get("image_data")
         session_id = await ctx.store.get("session_id")
         message = await ctx.store.get("message", "")
-        config = await ctx.store.get("holiday_config")
+        config = get_holiday_config()
 
         image_file = BytesIO(image_data)
         image_file.name = settings.mock_upload_file_name

@@ -51,7 +51,3 @@ def get_holiday_config() -> dict[str, Any]:
     """Get prompt configuration (kept for backward compatibility)."""
     return get_prompt_config(_cache_version)
 
-
-def get_superhero_config() -> dict[str, Any]:
-    """Get prompt configuration (kept for backward compatibility)."""
-    return get_prompt_config(_cache_version)
