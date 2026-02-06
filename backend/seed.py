@@ -111,6 +111,7 @@ def seed_prompt_configs() -> None:
                 validation_prompt=DEFAULT_HOLIDAY_VALIDATION_PROMPT,
                 image_prompt=DEFAULT_HOLIDAY_IMAGE_PROMPT,
                 themes=DEFAULT_HOLIDAY_THEMES,
+                holiday_main_theme="New Year's Eve Party",
             )
             session.add(config)
             session.commit()

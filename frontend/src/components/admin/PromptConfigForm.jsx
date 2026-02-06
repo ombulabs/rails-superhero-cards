@@ -6,18 +6,30 @@ export function PromptConfigForm({
   validationPrompt,
   imagePrompt,
   themes,
+  holidayMainTheme,
   onValidationPromptChange,
   onImagePromptChange,
   onThemesChange,
+  onHolidayMainThemeChange,
   onSave,
   loading,
   error,
   success,
 }) {
-  const isFormValid = validationPrompt.trim() && imagePrompt.trim() && themes.length > 0
+  const isFormValid = validationPrompt.trim() && imagePrompt.trim() && themes.length > 0 && holidayMainTheme.trim()
 
   return (
     <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <TextField
+        label="Holiday Main Theme Name"
+        value={holidayMainTheme}
+        onChange={(e) => onHolidayMainThemeChange(e.target.value)}
+        disabled={loading}
+        fullWidth
+        placeholder="e.g., New Year's Eve Party, Carnival, FIFA World Cup"
+        helperText="This name will be displayed in the card generation UI (e.g., 'Generating Your Hero Card...')"
+      />
+
       <TextField
         label="Validation Prompt"
         multiline

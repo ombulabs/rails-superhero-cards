@@ -14,6 +14,7 @@ export function AdminPage() {
   const [validationPrompt, setValidationPrompt] = useState('')
   const [imagePrompt, setImagePrompt] = useState('')
   const [themes, setThemes] = useState([])
+  const [holidayMainTheme, setHolidayMainTheme] = useState("New Year's Eve Party")
   const [loading, setLoading] = useState(false)
   const [loadingConfig, setLoadingConfig] = useState(true)
   const [error, setError] = useState(null)
@@ -35,6 +36,7 @@ export function AdminPage() {
       setValidationPrompt(config.validation_prompt)
       setImagePrompt(config.image_prompt)
       setThemes(config.themes || [])
+      setHolidayMainTheme(config.holiday_main_theme || "New Year's Eve Party")
     } catch (err) {
       setError('Failed to load configuration. Please try again.')
       console.error('Error loading config:', err)
@@ -53,6 +55,7 @@ export function AdminPage() {
         validation_prompt: validationPrompt,
         image_prompt: imagePrompt,
         themes: themes,
+        holiday_main_theme: holidayMainTheme,
       }
 
       await updatePromptConfig(configData)
@@ -102,9 +105,11 @@ export function AdminPage() {
                 validationPrompt={validationPrompt}
                 imagePrompt={imagePrompt}
                 themes={themes}
+                holidayMainTheme={holidayMainTheme}
                 onValidationPromptChange={setValidationPrompt}
                 onImagePromptChange={setImagePrompt}
                 onThemesChange={setThemes}
+                onHolidayMainThemeChange={setHolidayMainTheme}
                 onSave={handleSave}
                 loading={loading}
                 error={error}

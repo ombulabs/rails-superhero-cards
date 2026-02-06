@@ -21,15 +21,16 @@ export function HeroCardForm({
   onHolidayThemeChange,
   holidayMessage,
   onHolidayMessageChange,
+  holidayMainTheme,
 }) {
   return (
     <Card elevation={3}>
       <CardContent sx={{ p: 4 }}>
         <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <HolidayToggle checked={holidayTheme} onChange={onHolidayThemeChange} />
+          <HolidayToggle checked={holidayTheme} onChange={onHolidayThemeChange} holidayMainTheme={holidayMainTheme} />
 
           {holidayTheme ? (
-            <ThemedInput value={holidayMessage} onChange={onHolidayMessageChange} />
+            <ThemedInput value={holidayMessage} onChange={onHolidayMessageChange} holidayMainTheme={holidayMainTheme} />
           ) : (
             <SkillsInput value={skills} onChange={onSkillsChange} />
           )}
@@ -68,11 +69,11 @@ export function HeroCardForm({
           >
             {loading
               ? holidayTheme
-                ? 'Generating Your New Year Card...'
-                : 'Generating Your Hero Card...'
+                ? `Generating Your ${holidayMainTheme} Card...`
+                : 'Generating Your Super Hero Card...'
               : holidayTheme
-                ? '🎆 Generate New Year Card'
-                : 'Generate Hero Card'}
+                ? `🎆 Generate ${holidayMainTheme} Card`
+                : 'Generate Super Hero Card'}
           </Button>
         </Box>
       </CardContent>

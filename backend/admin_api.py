@@ -20,6 +20,7 @@ class PromptConfigUpdate(BaseModel):
     validation_prompt: str | None = None
     image_prompt: str | None = None
     themes: list[str] | None = None
+    holiday_main_theme: str | None = None
 
     @field_validator("themes")
     @classmethod
@@ -40,6 +41,7 @@ class PromptConfigResponse(BaseModel):
     validation_prompt: str
     image_prompt: str
     themes: list[str]
+    holiday_main_theme: str
 
 
 # TODO: Add proper authentication/authorization middleware
@@ -63,6 +65,7 @@ async def get_prompt_config() -> PromptConfigResponse:
                 validation_prompt=config.validation_prompt,
                 image_prompt=config.image_prompt,
                 themes=config.themes,
+                holiday_main_theme=config.holiday_main_theme,
             )
             logger.debug(f"Retrieved config: {config.id}, themes type: {type(config.themes)}")
             return response_data
@@ -97,6 +100,8 @@ async def update_prompt_config(
                 config.image_prompt = config_data.image_prompt
             if config_data.themes is not None:
                 config.themes = config_data.themes
+            if config_data.holiday_main_theme is not None:
+                config.holiday_main_theme = config_data.holiday_main_theme
 
             session.commit()
             session.refresh(config)
@@ -107,6 +112,7 @@ async def update_prompt_config(
                 validation_prompt=config.validation_prompt,
                 image_prompt=config.image_prompt,
                 themes=config.themes,
+                holiday_main_theme=config.holiday_main_theme,
             )
 
             logger.info("Updated prompt config")
@@ -123,3 +129,7 @@ async def update_prompt_config(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating config: {str(e)}",
         )
+
+# TODO: add post endpoint to create new prompt
+# TODO: add list of prompts endpoint
+#  TODO: add activate prompts

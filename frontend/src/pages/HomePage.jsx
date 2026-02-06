@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Box, Typography, Card, CircularProgress } from '@mui/material'
 import axios from 'axios'
 import heic2any from 'heic2any'
 import { HeroCardForm } from '../components/form/HeroCardForm'
 import { GeneratedCard } from '../components/result/GeneratedCard'
+import { fetchPublicConfig } from '../services/adminApi'
 
 export function HomePage() {
   const [skills, setSkills] = useState('')
@@ -17,6 +18,20 @@ export function HomePage() {
   const [error, setError] = useState(null)
   const [holidayTheme, setHolidayTheme] = useState(false)
   const [holidayMessage, setHolidayMessage] = useState('')
+  const [holidayMainTheme, setHolidayMainTheme] = useState("")
+
+  // Load public config when component mounts
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await fetchPublicConfig()
+        setHolidayMainTheme(config.holiday_main_theme || "New Year's Eve Party")
+      } catch (err) {
+        console.error('Error loading public config:', err)
+      }
+    }
+    loadConfig()
+  }, [])
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0]
@@ -230,8 +245,8 @@ export function HomePage() {
             <Box sx={{ p: 4 }}>
               <Typography variant="h5" gutterBottom sx={{ textAlign: 'center', mb: 3 }}>
                 {holidayTheme
-                  ? '🎆 Generating Your New Year Card...'
-                  : '🦸 Generating Your Hero Card...'}
+                  ? `🎆 Generating Your ${holidayMainTheme} Card...`
+                  : '🦸 Generating Your Super Hero Card...'}
               </Typography>
 
               <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -285,6 +300,7 @@ export function HomePage() {
             onHolidayThemeChange={(e) => setHolidayTheme(e.target.checked)}
             holidayMessage={holidayMessage}
             onHolidayMessageChange={(e) => setHolidayMessage(e.target.value)}
+            holidayMainTheme={holidayMainTheme}
           />
         )}
       </Container>

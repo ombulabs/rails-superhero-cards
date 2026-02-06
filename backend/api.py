@@ -6,6 +6,7 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi_limiter.depends import RateLimiter
+from pydantic import BaseModel
 
 from .aws_service import S3Service
 from .config import settings
@@ -13,11 +14,26 @@ from .db import get_session
 from .dependencies import get_redis_pubsub_client
 from .exceptions import ImageFormatError
 from .logging_config import logger
-from .models import Card
+from .models import Card, PromptConfig
 from .tasks import generate_superhero_card
 from .utils import compress_image, validate_image_format
 
 router = APIRouter()
+
+
+class ConfigResponse(BaseModel):
+    """Public config response with only holiday_main_theme."""
+    holiday_main_theme: str
+
+
+@router.get("/config", response_model=ConfigResponse)
+async def get_public_config() -> ConfigResponse:
+    """Get public configuration (holiday_main_theme only)."""
+    with get_session() as session:
+        config = session.query(PromptConfig).first()
+        if not config:
+            return ConfigResponse(holiday_main_theme="Hero")
+        return ConfigResponse(holiday_main_theme=config.holiday_main_theme)
 
 
 @router.post("/generate-hero-card", dependencies=[Depends(RateLimiter(times=2, seconds=5))])
