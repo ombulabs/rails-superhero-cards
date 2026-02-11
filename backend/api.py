@@ -96,18 +96,16 @@ def _get_card_from_s3(session_id: str) -> str | None:
 
 
 def _get_error_from_db(session_id: str) -> str | None:
-    db_session = SessionLocal()
     try:
-        card = db_session.query(Card).filter(Card.session_id == session_id).first()
-        if card:
-            return card.error_message if card.error_message else None
-        logger.warning(f"No card found in DB for session {session_id}")
-        return None
+        with get_session() as db_session:
+            card = db_session.query(Card).filter(Card.session_id == session_id).first()
+            if card:
+                return card.error_message if card.error_message else None
+            logger.warning(f"No card found in DB for session {session_id}")
+            return None
     except Exception as error:
         logger.error(f"Error getting error from db session {session_id}: {error}")
         return None
-    finally:
-        db_session.close()
 
 
 @router.get("/stream/{session_id}")
