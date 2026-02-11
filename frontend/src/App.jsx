@@ -6,23 +6,42 @@ import { Footer } from './components/layout/Footer'
 import { Pipes } from './components/layout/Pipes'
 import { HomePage } from './pages/HomePage'
 import { AdminPage } from './pages/AdminPage'
+import { LoginPage } from './pages/LoginPage'
+import { AuthProvider, AdminRoute } from './authentication'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+
+
+// const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+const GOOGLE_CLIENT_ID = "867747251246-ohd17shu1raf56ie9ij0jah8mhbdns4j.apps.googleusercontent.com"
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <BrowserRouter>
-        <Box sx={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', bgcolor: 'white' }}>
-          <Pipes />
-          <Header />
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <AuthProvider>
+          <BrowserRouter>
+            <Box sx={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', bgcolor: 'white' }}>
+              <Pipes />
+              <Header />
 
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/admin" element={<AdminPage />} />
-          </Routes>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminPage />
+                    </AdminRoute>
+                  }
+                />
+              </Routes>
 
-          <Footer />
-        </Box>
-      </BrowserRouter>
+              <Footer />
+            </Box>
+          </BrowserRouter>
+        </AuthProvider>
+      </GoogleOAuthProvider>
     </ThemeProvider>
   )
 }

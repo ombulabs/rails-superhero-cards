@@ -2,8 +2,9 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, ConfigDict, field_validator
+from sqlalchemy.orm import Session
 
 from .db import get_session
 from .logging_config import logger
@@ -47,28 +48,27 @@ class PromptConfigResponse(BaseModel):
 # TODO: Add proper authentication/authorization middleware
 
 @router.get("/prompt-config", response_model=PromptConfigResponse)
-async def get_prompt_config() -> PromptConfigResponse:
+async def get_prompt_config(session: Session = Depends(get_session)) -> PromptConfigResponse:
     """Get the prompt configuration."""
     try:
-        with get_session() as session:
-            config = session.query(PromptConfig).first()
+        config = session.query(PromptConfig).first()
 
-            if not config:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Prompt config not found. Run seed first.",
-                )
-
-            # Access all attributes while session is open to avoid DetachedInstanceError
-            response_data = PromptConfigResponse(
-                id=config.id,
-                validation_prompt=config.validation_prompt,
-                image_prompt=config.image_prompt,
-                themes=config.themes,
-                holiday_main_theme=config.holiday_main_theme,
+        if not config:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Prompt config not found. Run seed first.",
             )
-            logger.debug(f"Retrieved config: {config.id}, themes type: {type(config.themes)}")
-            return response_data
+
+        # Access all attributes while session is open to avoid DetachedInstanceError
+        response_data = PromptConfigResponse(
+            id=config.id,
+            validation_prompt=config.validation_prompt,
+            image_prompt=config.image_prompt,
+            themes=config.themes,
+            holiday_main_theme=config.holiday_main_theme,
+        )
+        logger.debug(f"Retrieved config: {config.id}, themes type: {type(config.themes)}")
+        return response_data
     except HTTPException:
         raise
     except Exception as e:
@@ -81,43 +81,43 @@ async def get_prompt_config() -> PromptConfigResponse:
 @router.put("/prompt-config", response_model=PromptConfigResponse)
 async def update_prompt_config(
     config_data: PromptConfigUpdate,
+    session: Session = Depends(get_session),
 ) -> PromptConfigResponse:
     """Update the prompt configuration."""
     try:
-        with get_session() as session:
-            config = session.query(PromptConfig).first()
+        config = session.query(PromptConfig).first()
 
-            if not config:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Prompt config not found",
-                )
-
-            # Update only provided fields
-            if config_data.validation_prompt is not None:
-                config.validation_prompt = config_data.validation_prompt
-            if config_data.image_prompt is not None:
-                config.image_prompt = config_data.image_prompt
-            if config_data.themes is not None:
-                config.themes = config_data.themes
-            if config_data.holiday_main_theme is not None:
-                config.holiday_main_theme = config_data.holiday_main_theme
-
-            session.commit()
-            session.refresh(config)
-
-            # Access all attributes while session is open to avoid DetachedInstanceError
-            response_data = PromptConfigResponse(
-                id=config.id,
-                validation_prompt=config.validation_prompt,
-                image_prompt=config.image_prompt,
-                themes=config.themes,
-                holiday_main_theme=config.holiday_main_theme,
+        if not config:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Prompt config not found",
             )
 
-            logger.info("Updated prompt config")
+        # Update only provided fields
+        if config_data.validation_prompt is not None:
+            config.validation_prompt = config_data.validation_prompt
+        if config_data.image_prompt is not None:
+            config.image_prompt = config_data.image_prompt
+        if config_data.themes is not None:
+            config.themes = config_data.themes
+        if config_data.holiday_main_theme is not None:
+            config.holiday_main_theme = config_data.holiday_main_theme
 
-        # Invalidate cache after session is closed
+        session.commit()
+        session.refresh(config)
+
+        # Access all attributes while session is open to avoid DetachedInstanceError
+        response_data = PromptConfigResponse(
+            id=config.id,
+            validation_prompt=config.validation_prompt,
+            image_prompt=config.image_prompt,
+            themes=config.themes,
+            holiday_main_theme=config.holiday_main_theme,
+        )
+
+        logger.info("Updated prompt config")
+
+        # Invalidate cache after commit
         invalidate_prompt_config_cache()
 
         return response_data

@@ -21,6 +21,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    deactivated_at: Mapped[datetime | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
 
 class PromptConfig(Base):
