@@ -63,7 +63,7 @@ class Settings(BaseSettings):
 
     price_per_image: float = 0.04
 
-    GOOGLE_CLIENT_ID: str = "867747251246-ohd17shu1raf56ie9ij0jah8mhbdns4j.apps.googleusercontent.com"
+    GOOGLE_CLIENT_ID: str = ""
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"

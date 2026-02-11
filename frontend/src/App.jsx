@@ -10,9 +10,7 @@ import { LoginPage } from './pages/LoginPage'
 import { AuthProvider, AdminRoute } from './authentication'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 
-
-// const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
-const GOOGLE_CLIENT_ID = "867747251246-ohd17shu1raf56ie9ij0jah8mhbdns4j.apps.googleusercontent.com"
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 function App() {
   return (
