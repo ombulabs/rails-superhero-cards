@@ -1,19 +1,19 @@
-import { Navigate } from "react-router-dom";
-import { CircularProgress } from "@mui/material";
-import { useAuth } from "../hooks/useAuth.js";
+import { Navigate } from 'react-router-dom'
+import { CircularProgress } from '@mui/material'
+import { useAuth } from '../hooks/useAuth.js'
 
 export function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth()
 
   if (loading) {
-    return <CircularProgress />;
+    return <CircularProgress />
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace />
   }
 
-  return children;
+  return children
 }
 
-export default ProtectedRoute;
+export default ProtectedRoute

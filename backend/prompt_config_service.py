@@ -50,4 +50,3 @@ def get_prompt_config(cache_version: int = 0) -> dict[str, Any]:  # noqa: ARG001
 def get_holiday_config() -> dict[str, Any]:
     """Get prompt configuration (kept for backward compatibility)."""
     return get_prompt_config(_cache_version)
-

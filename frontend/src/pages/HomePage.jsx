@@ -18,7 +18,7 @@ export function HomePage() {
   const [error, setError] = useState(null)
   const [holidayTheme, setHolidayTheme] = useState(false)
   const [holidayMessage, setHolidayMessage] = useState('')
-  const [holidayMainTheme, setHolidayMainTheme] = useState("")
+  const [holidayMainTheme, setHolidayMainTheme] = useState('')
 
   // Load public config when component mounts
   useEffect(() => {

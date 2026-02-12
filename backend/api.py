@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi_limiter.depends import RateLimiter
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from .aws_service import S3Service
 from .config import settings
@@ -23,11 +24,12 @@ router = APIRouter()
 
 class ConfigResponse(BaseModel):
     """Public config response with only holiday_main_theme."""
+
     holiday_main_theme: str
 
 
 @router.get("/config", response_model=ConfigResponse)
-async def get_public_config(db=Depends(get_session)) -> ConfigResponse:
+async def get_public_config(db: Session = Depends(get_session)) -> ConfigResponse:
     """Get public configuration (holiday_main_theme only)."""
     config = db.query(PromptConfig).first()
     if not config:

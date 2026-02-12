@@ -61,22 +61,20 @@ export function Header() {
                 {link.label}
               </NavLink>
             ))}
-            {
-              isAuthenticated && (
-                <Button
-                  onClick={handleLogout}
-                  sx={{
-                    backgroundColor: 'white',
-                    color: COLORS.headerLink,
-                    hoverColor: COLORS.headerLinkHover,
-                    "&:hover": { opacity: 0.8 },
-                    pt: 0,
-                  }}
-                >
-                  Logout
-                </Button>
-              )
-            }
+            {isAuthenticated && (
+              <Button
+                onClick={handleLogout}
+                sx={{
+                  backgroundColor: 'white',
+                  color: COLORS.headerLink,
+                  hoverColor: COLORS.headerLinkHover,
+                  '&:hover': { opacity: 0.8 },
+                  pt: 0,
+                }}
+              >
+                Logout
+              </Button>
+            )}
           </Box>
 
           {/* Mobile Hamburger Menu */}
@@ -123,21 +121,19 @@ export function Header() {
               </ListItem>
             ))}
           </List>
-          {
-            isAuthenticated && (
-              <Button
-                onClick={handleLogout}
-                sx={{
-                  backgroundColor: 'white',
-                  color: COLORS.headerLink,
-                  hoverColor: COLORS.headerLinkHover,
-                  pt: 0,
-                }}
-              >
-                Logout
-              </Button>
-            )
-          }
+          {isAuthenticated && (
+            <Button
+              onClick={handleLogout}
+              sx={{
+                backgroundColor: 'white',
+                color: COLORS.headerLink,
+                hoverColor: COLORS.headerLinkHover,
+                pt: 0,
+              }}
+            >
+              Logout
+            </Button>
+          )}
         </Box>
       </Drawer>
     </Box>

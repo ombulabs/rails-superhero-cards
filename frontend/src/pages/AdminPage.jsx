@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  Container,
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  CircularProgress,
-} from '@mui/material'
+import { Container, Box, Typography, Card, CardContent, CircularProgress } from '@mui/material'
 import { PromptConfigForm } from '../components/admin/PromptConfigForm'
 import { fetchPromptConfig, updatePromptConfig } from '../services/adminApi'
 

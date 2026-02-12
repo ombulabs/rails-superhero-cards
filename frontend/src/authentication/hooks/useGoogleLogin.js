@@ -1,37 +1,37 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "./useAuth.js";
-import { paths } from "../../routes/paths.jsx";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from './useAuth.js'
+import { paths } from '../../routes/paths.jsx'
 
 export const useGoogleLogin = () => {
-  const navigate = useNavigate();
-  const { loginWithGoogle } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate()
+  const { loginWithGoogle } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
-    const result = await loginWithGoogle(credentialResponse.credential);
+    const result = await loginWithGoogle(credentialResponse.credential)
 
     if (result.success) {
-      navigate(paths.admin());
+      navigate(paths.admin())
     } else {
-      setError(result.error);
+      setError(result.error)
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const handleGoogleError = () => {
-    setError("Google login failed. Please try again.");
-    setLoading(false);
-  };
+    setError('Google login failed. Please try again.')
+    setLoading(false)
+  }
 
   return {
     handleGoogleSuccess,
     handleGoogleError,
     error,
     loading,
-  };
-};
+  }
+}

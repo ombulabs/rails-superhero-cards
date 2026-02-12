@@ -16,7 +16,8 @@ export function PromptConfigForm({
   error,
   success,
 }) {
-  const isFormValid = validationPrompt.trim() && imagePrompt.trim() && themes.length > 0 && holidayMainTheme.trim()
+  const isFormValid =
+    validationPrompt.trim() && imagePrompt.trim() && themes.length > 0 && holidayMainTheme.trim()
 
   return (
     <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

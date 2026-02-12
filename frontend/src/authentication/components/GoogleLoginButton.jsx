@@ -1,10 +1,9 @@
-import { GoogleLogin } from "@react-oauth/google";
-import { Alert, Box } from "@mui/material";
-import { useGoogleLogin } from "../hooks/useGoogleLogin.js";
+import { GoogleLogin } from '@react-oauth/google'
+import { Alert, Box } from '@mui/material'
+import { useGoogleLogin } from '../hooks/useGoogleLogin.js'
 
 export default function GoogleLoginButton() {
-  const { handleGoogleSuccess, handleGoogleError, error, loading } =
-    useGoogleLogin();
+  const { handleGoogleSuccess, handleGoogleError, error, loading } = useGoogleLogin()
 
   return (
     <Box>
@@ -16,7 +15,7 @@ export default function GoogleLoginButton() {
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", justifyContent: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
@@ -27,5 +26,5 @@ export default function GoogleLoginButton() {
         />
       </Box>
     </Box>
-  );
+  )
 }

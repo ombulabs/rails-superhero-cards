@@ -27,10 +27,18 @@ export function HeroCardForm({
     <Card elevation={3}>
       <CardContent sx={{ p: 4 }}>
         <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <HolidayToggle checked={holidayTheme} onChange={onHolidayThemeChange} holidayMainTheme={holidayMainTheme} />
+          <HolidayToggle
+            checked={holidayTheme}
+            onChange={onHolidayThemeChange}
+            holidayMainTheme={holidayMainTheme}
+          />
 
           {holidayTheme ? (
-            <ThemedInput value={holidayMessage} onChange={onHolidayMessageChange} holidayMainTheme={holidayMainTheme} />
+            <ThemedInput
+              value={holidayMessage}
+              onChange={onHolidayMessageChange}
+              holidayMainTheme={holidayMainTheme}
+            />
           ) : (
             <SkillsInput value={skills} onChange={onSkillsChange} />
           )}

@@ -9,12 +9,13 @@ from langfuse import Langfuse
 from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from .auth_api import router as auth_router
 from .admin_api import router as admin_router
 from .api import router
+from .auth_api import router as auth_router
 from .config import settings
 from .dependencies import lifespan
 from .exceptions import ImageFormatError, ImageSizeError, InputValidationError
+
 
 class LimitUploadSize(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI, max_upload_size: int):

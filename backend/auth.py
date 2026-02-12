@@ -16,6 +16,7 @@ from backend.models import User
 
 security = HTTPBearer()
 
+
 @dataclass(frozen=True, kw_only=True)
 class GoogleTokenPayload:
     email: str

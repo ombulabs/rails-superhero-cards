@@ -1,5 +1,6 @@
 """Custom exceptions for the application."""
 
+
 class InputValidationError(Exception):
     """Raised when user input (prompt/text) validation fails."""
 
@@ -52,6 +53,7 @@ class InvalidUserCredentialsError(Exception):
     """Raised when user credentials are invalid."""
 
     pass
+
 
 class UserNotFoundError(Exception):
     """Raised when a user is not found in the database."""

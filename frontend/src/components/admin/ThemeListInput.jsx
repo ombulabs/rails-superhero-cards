@@ -62,7 +62,10 @@ export function ThemeListInput({ themes, onChange, disabled = false }) {
       </Box>
 
       {themes.length > 0 ? (
-        <List dense sx={{ bgcolor: 'background.paper', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+        <List
+          dense
+          sx={{ bgcolor: 'background.paper', borderRadius: 1, border: '1px solid #e0e0e0' }}
+        >
           {themes.map((theme, index) => (
             <ListItem key={index} divider={index < themes.length - 1}>
               <ListItemText

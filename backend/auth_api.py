@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from backend.auth import (
     create_access_token,
@@ -42,7 +43,7 @@ class UserResponse(BaseModel):
 
 
 @router.post("/google", response_model=TokenResponse)
-async def google_login(request: GoogleLoginRequest, db = Depends(get_session)):
+async def google_login(request: GoogleLoginRequest, db: Session = Depends(get_session)) -> TokenResponse:
     google_user_info = verify_google_token(request.google_token)
     email = google_user_info.email
     name = google_user_info.name
@@ -71,7 +72,5 @@ async def google_login(request: GoogleLoginRequest, db = Depends(get_session)):
 
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_info(current_user: User = Depends(get_current_active_user)):
+def get_current_user_info(current_user: User = Depends(get_current_active_user)) -> UserResponse:
     return current_user
-
-

@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, field_validator
 from sqlalchemy.orm import Session
 
@@ -45,8 +45,6 @@ class PromptConfigResponse(BaseModel):
     holiday_main_theme: str
 
 
-# TODO: Add proper authentication/authorization middleware
-
 @router.get("/prompt-config", response_model=PromptConfigResponse)
 async def get_prompt_config(session: Session = Depends(get_session)) -> PromptConfigResponse:
     """Get the prompt configuration."""
@@ -72,11 +70,12 @@ async def get_prompt_config(session: Session = Depends(get_session)) -> PromptCo
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving prompt config: {str(e)}", exc_info=True)
+        logger.error(f"Error retrieving prompt config: {e!s}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving config: {str(e)}",
+            detail=f"Error retrieving config: {e!s}",
         )
+
 
 @router.put("/prompt-config", response_model=PromptConfigResponse)
 async def update_prompt_config(
@@ -124,12 +123,8 @@ async def update_prompt_config(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating prompt config: {str(e)}", exc_info=True)
+        logger.error(f"Error updating prompt config: {e!s}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating config: {str(e)}",
+            detail=f"Error updating config: {e!s}",
         )
-
-# TODO: add post endpoint to create new prompt
-# TODO: add list of prompts endpoint
-#  TODO: add activate prompts

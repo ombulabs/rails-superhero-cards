@@ -14,6 +14,7 @@ class CardTheme(StrEnum):
     SUPERHERO = "superhero"
     HOLIDAY = "holiday"
 
+
 class User(Base):
     __tablename__ = "users"
 
@@ -23,6 +24,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     deactivated_at: Mapped[datetime | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
+
 
 class PromptConfig(Base):
     """Stores configurable prompts and themes for card generation."""
@@ -36,6 +38,7 @@ class PromptConfig(Base):
     holiday_main_theme: Mapped[str] = mapped_column(Text, nullable=False, default="Hero")
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
+
 
 class Card(Base):
     __tablename__ = "cards"

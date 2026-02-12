@@ -1,16 +1,16 @@
-import { Stack, Typography } from "@mui/material";
-import GoogleLoginButton from "./GoogleLoginButton.jsx";
+import { Stack, Typography } from '@mui/material'
+import GoogleLoginButton from './GoogleLoginButton.jsx'
 
 export default function LoginCard() {
   return (
     <Stack
       sx={{
-        display: "flex",
-        alignItems: "center",
-        flexDirection: "column",
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'column',
         borderWidth: 2,
-        borderColor: "primary.main",
-        borderStyle: "solid",
+        borderColor: 'primary.main',
+        borderStyle: 'solid',
         borderRadius: 2,
         p: 4,
       }}
@@ -24,5 +24,5 @@ export default function LoginCard() {
 
       <GoogleLoginButton />
     </Stack>
-  );
+  )
 }

@@ -18,7 +18,14 @@ function App() {
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <AuthProvider>
           <BrowserRouter>
-            <Box sx={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', bgcolor: 'white' }}>
+            <Box
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                minHeight: '100vh',
+                bgcolor: 'white',
+              }}
+            >
               <Pipes />
               <Header />
 
