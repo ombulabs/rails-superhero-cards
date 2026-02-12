@@ -1,7 +1,7 @@
 import { Box, FormControlLabel, Switch, Typography } from '@mui/material'
 import { AcUnit } from '@mui/icons-material'
 
-export function HolidayToggle({ checked, onChange }) {
+export function HolidayToggle({ checked, onChange, holidayMainTheme }) {
   return (
     <Box
       sx={{
@@ -34,7 +34,7 @@ export function HolidayToggle({ checked, onChange }) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AcUnit sx={{ color: checked ? '#FFD700' : '#666' }} />
             <Typography variant="body1" sx={{ fontWeight: checked ? 600 : 400 }}>
-              🎆 New Year Theme
+              🎆 {holidayMainTheme} Theme
             </Typography>
           </Box>
         }

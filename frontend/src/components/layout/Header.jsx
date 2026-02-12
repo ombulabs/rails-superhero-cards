@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
+  Button,
   Container,
   IconButton,
   Drawer,
@@ -13,12 +15,20 @@ import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material'
 import { NavLink } from '../common/NavLink'
 import { NAV_LINKS } from '../../utils/constants'
 import { COLORS } from '../../utils/constants'
+import { useAuth } from '../../authentication/hooks/useAuth.js'
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const navigate = useNavigate()
+  const { isAuthenticated, logout } = useAuth()
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
   }
 
   return (
@@ -51,6 +61,20 @@ export function Header() {
                 {link.label}
               </NavLink>
             ))}
+            {isAuthenticated && (
+              <Button
+                onClick={handleLogout}
+                sx={{
+                  backgroundColor: 'white',
+                  color: COLORS.headerLink,
+                  hoverColor: COLORS.headerLinkHover,
+                  '&:hover': { opacity: 0.8 },
+                  pt: 0,
+                }}
+              >
+                Logout
+              </Button>
+            )}
           </Box>
 
           {/* Mobile Hamburger Menu */}
@@ -97,6 +121,19 @@ export function Header() {
               </ListItem>
             ))}
           </List>
+          {isAuthenticated && (
+            <Button
+              onClick={handleLogout}
+              sx={{
+                backgroundColor: 'white',
+                color: COLORS.headerLink,
+                hoverColor: COLORS.headerLinkHover,
+                pt: 0,
+              }}
+            >
+              Logout
+            </Button>
+          )}
         </Box>
       </Drawer>
     </Box>

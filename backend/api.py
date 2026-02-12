@@ -6,18 +6,35 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi_limiter.depends import RateLimiter
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from .aws_service import S3Service
 from .config import settings
-from .db import get_session
+from .db import SessionLocal, get_session
 from .dependencies import get_redis_pubsub_client
 from .exceptions import ImageFormatError
 from .logging_config import logger
-from .models import Card
+from .models import Card, PromptConfig
 from .tasks import generate_superhero_card
 from .utils import compress_image, validate_image_format
 
 router = APIRouter()
+
+
+class ConfigResponse(BaseModel):
+    """Public config response with only holiday_main_theme."""
+
+    holiday_main_theme: str
+
+
+@router.get("/config", response_model=ConfigResponse)
+async def get_public_config(db: Session = Depends(get_session)) -> ConfigResponse:
+    """Get public configuration (holiday_main_theme only)."""
+    config = db.query(PromptConfig).first()
+    if not config:
+        return ConfigResponse(holiday_main_theme="Hero")
+    return ConfigResponse(holiday_main_theme=config.holiday_main_theme)
 
 
 @router.post("/generate-hero-card", dependencies=[Depends(RateLimiter(times=2, seconds=5))])
@@ -60,22 +77,24 @@ async def generate_hero_card(
 
 
 def _get_card_from_s3(session_id: str) -> str | None:
+    db_session = SessionLocal()
     try:
-        with get_session() as db_session:
-            card = db_session.query(Card).filter(Card.session_id == session_id).first()
-            if not card or not card.aws_object_key:
-                logger.warning(f"No card or aws_object_key found for session {session_id}")
-                return None
+        card = db_session.query(Card).filter(Card.session_id == session_id).first()
+        if not card or not card.aws_object_key:
+            logger.warning(f"No card or aws_object_key found for session {session_id}")
+            return None
 
-            folder_prefix = settings.s3_holiday_folder_prefix if card.theme == "holiday" else settings.s3_folder_prefix
-            s3_service = S3Service(folder_prefix=folder_prefix)
+        folder_prefix = settings.s3_holiday_folder_prefix if card.theme == "holiday" else settings.s3_folder_prefix
+        s3_service = S3Service(folder_prefix=folder_prefix)
 
-            image_base64 = s3_service.get_image_base64(card.aws_object_key)
-            logger.debug(f"Retrieved card from S3 for session {session_id}")
-            return image_base64
+        image_base64 = s3_service.get_image_base64(card.aws_object_key)
+        logger.debug(f"Retrieved card from S3 for session {session_id}")
+        return image_base64
     except Exception as error:
         logger.error(f"Error getting card from S3 for session {session_id}: {error}")
         return None
+    finally:
+        db_session.close()
 
 
 def _get_error_from_db(session_id: str) -> str | None:

@@ -9,7 +9,9 @@ from langfuse import Langfuse
 from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from .admin_api import router as admin_router
 from .api import router
+from .auth_api import router as auth_router
 from .config import settings
 from .dependencies import lifespan
 from .exceptions import ImageFormatError, ImageSizeError, InputValidationError
@@ -45,6 +47,8 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "dist"
 

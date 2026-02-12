@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from typing import Generator
 
 from sqlalchemy import create_engine
@@ -10,8 +9,8 @@ engine = create_engine(settings.database_url)
 SessionLocal = sessionmaker(bind=engine)
 
 
-@contextmanager
 def get_session() -> Generator[Session, None, None]:
+    """FastAPI dependency that provides a database session."""
     session = SessionLocal()
     try:
         yield session

@@ -3,9 +3,10 @@ import { Box, Typography, TextField } from '@mui/material'
 export function ThemedInput({
   value,
   onChange,
-  label = 'Your New Year Message',
-  placeholder = 'Happy New Year from the FastRuby.io team! 🎆',
-  helperText = 'Add a new year message for your best wishes card (max 30 characters)',
+  holidayMainTheme,
+  label = `Your ${holidayMainTheme} Message`,
+  placeholder = `Happy ${holidayMainTheme} from the FastRuby.io team! 🎆`,
+  helperText = `Add a ${holidayMainTheme} message for your best wishes card (max 30 characters)`,
   maxLength = 30,
 }) {
   return (
